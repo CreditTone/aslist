@@ -27,6 +27,13 @@ func (self *AsList) MarshalJson() []byte {
 	return data
 }
 
+func (self *AsList) UnmarshalJson(data []byte) {
+	self.locker.Lock()
+	defer self.locker.Unlock()
+	self.list = []interface{}{}
+	json.Unmarshal(data, &self.list)
+}
+
 func (self *AsList) Push(obj interface{}) {
 	self.RightPush(obj)
 }
