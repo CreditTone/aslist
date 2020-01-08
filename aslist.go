@@ -20,6 +20,12 @@ func NewAsList() *AsList {
 	}
 }
 
+func (self *AsList) Length() int {
+	self.locker.Lock()
+	defer self.locker.Unlock()
+	return len(self.list)
+}
+
 func (self *AsList) MarshalJson() []byte {
 	self.locker.Lock()
 	defer self.locker.Unlock()
