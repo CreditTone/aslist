@@ -1,0 +1,15 @@
+/*.sum
+/.vscode
+/go.sum
+/cmd/taurus.exe
+/cmd/tmp
+.idea
+/cmd/taurus
+/app/export/*.csv
+/cmd/*.csv
+*.idea/
+/vendor
+/go.mod
+/kipping...
+*.DS_Store
+*.log
