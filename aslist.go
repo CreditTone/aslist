@@ -96,11 +96,13 @@ func (self *AsList) LeftPop() interface{} {
 	return nil
 }
 
-func (self *AsList) Range(rangeFun func(index int, item interface{})) {
+func (self *AsList) Range(rangeFunc func(index int, item interface{}) bool) {
 	self.locker.Lock()
 	defer self.locker.Unlock()
 	for i, item := range self.list {
-		rangeFun(i, item)
+		if rangeFunc(i, item) {
+			break
+		}
 	}
 }
 
