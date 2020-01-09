@@ -21,15 +21,11 @@ import(
 type A struct {
 	Name string
 }
-
-type B struct {
-	Age int
-}
 ```
 
 ### 创建aslist
 ```golang
-asList := NewAsList()
+	asList := NewAsList()
 ```
 
 ### push元素
@@ -43,7 +39,7 @@ asList := NewAsList()
 
 ### 使用SortWithCompareFunc传入自定义函数排序
 ```golang
-asList := NewAsList()
+	asList := NewAsList()
 	asList.Push(A{Name: "我的名字好长"})
 	asList.Push(A{Name: "我名长"})
 	asList.Push(A{Name: "我的名字好长阿"})
@@ -88,7 +84,7 @@ PASS
 
 ### 使用指针结构做元素也可以
 ```golang
-asList := NewAsList()
+	asList := NewAsList()
 	asList.Push(&A{Name: "我的名字好长"})
 	asList.Push(&A{Name: "我名长"})
 	asList.Push(&A{Name: "我的名字好长阿"})
