@@ -106,6 +106,24 @@ func (self *AsList) Range(rangeFunc func(index int, item interface{}) bool) {
 	}
 }
 
+func (self *AsList) Clear() {
+	self.locker.Lock()
+	defer self.locker.Unlock()
+	self.list = []interface{}{}
+}
+
+func (self *AsList) ClearTargets(clearTargetsFunc func(index int, item interface{}) bool) {
+	self.locker.Lock()
+	defer self.locker.Unlock()
+	nlist := []interface{}{}
+	for i, item := range self.list {
+		if !clearTargetsFunc(i, item) {
+			nlist = append(nlist, item)
+		}
+	}
+	self.list = nlist
+}
+
 func (self *AsList) checkSortCondition() (Comparator, error) {
 	firstType := reflect.TypeOf(self.list[0])
 	var comparator Comparator
