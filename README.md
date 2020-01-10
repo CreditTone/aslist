@@ -47,21 +47,23 @@ type A struct {
 	asList.Push(A{Name: "我的名字长"})
 
 	t.Log("第一次遍历")
-	asList.Range(func(index int, item interface{}) {
-		t.Log(index, item)
-	})
+	asList.Range(func(index int, item interface{}) bool {
+    		t.Log(index, item)
+    		return false //如果要中断遍历，请返回true
+    	})
 	asList.SortWithCompareFunc(func(a, b interface{}) bool {
 		struct_a := a.(A)
 		struct_b := b.(A)
 		if len(struct_a.Name) > len(struct_b.Name) {
-			return true
+			return true //需要a 排在 b前面返回true
 		}
 		return false
 	})
 	t.Log("排序后遍历")
-	asList.Range(func(index int, item interface{}) {
-		t.Log(index, item)
-	})
+	asList.Range(func(index int, item interface{}) bool {
+    		t.Log(index, item)
+    		return false //如果要中断遍历，请返回true
+    	})
 ```
 输出结果：
 ```text
@@ -99,7 +101,7 @@ PASS
 		struct_a := a.(*A)
 		struct_b := b.(*A)
 		if len(struct_a.Name) > len(struct_b.Name) {
-			return true
+			return true //需要a 排在 b前面返回true
 		}
 		return false
 	})
@@ -151,14 +153,16 @@ func (self *B) Compare(a, b interface{}) bool {
 	asList.Push(&B{Age: 150})
 	asList.Push(&B{Age: 69})
 	t.Log("第一次遍历")
-	asList.Range(func(index int, item interface{}) {
-		t.Log(index, item)
-	})
+	asList.Range(func(index int, item interface{}) bool {
+    		t.Log(index, item)
+    		return false //如果要中断遍历，请返回true
+    	})
 	asList.Sort()
 	t.Log("排序后遍历")
-	asList.Range(func(index int, item interface{}) {
-		t.Log(index, item)
-	})
+	asList.Range(func(index int, item interface{}) bool {
+    		t.Log(index, item)
+    		return false //如果要中断遍历，请返回true
+    	})
 ```
 看到这里有没有java ArrayList.sort的感脚.输出如下
 ```text
@@ -188,14 +192,16 @@ PASS
 	asList.Push(&B{Age: 150})
 	asList.Push(&B{Age: 69})
 	t.Log("第一次遍历")
-	asList.Range(func(index int, item interface{}) {
-		t.Log(index, item)
-	})
+	asList.Range(func(index int, item interface{}) bool {
+    		t.Log(index, item)
+    		return false //如果要中断遍历，请返回true
+    	})
 	asList.Sort()
 	t.Log("排序后遍历")
-	asList.Range(func(index int, item interface{}) {
-		t.Log(index, item)
-	})
+	asList.Range(func(index int, item interface{}) bool {
+    		t.Log(index, item)
+    		return false //如果要中断遍历，请返回true
+        })
 	for i := 1; i < 10; i++ {
 		t.Log(fmt.Sprintf("第%d次pop:", i), asList.Pop())
 	}
@@ -256,5 +262,79 @@ PASS
     aslist_test.go:131: RightPop: &{23}
     aslist_test.go:132: LeftPop: &{150}
     aslist_test.go:133: [{"Age":121},{"Age":120},{"Age":69}]
+PASS
+```
+
+### 反序列化json
+```golang
+	list := []interface{}{}
+        list = append(list, &B{Age: 121}, &B{Age: 120}, &B{Age: 23}, &B{Age: 150}, &B{Age: 69})
+    	listJson, _ := json.Marshal(list)
+    	//加载json
+    	asList := NewAsList()
+    	asList.UnmarshalJson(listJson)
+    	t.Log("UnmarshalJson后遍历")
+    	asList.Range(func(index int, item interface{}) bool {
+    		t.Log(index, item)
+    		return false //如果要中断遍历，请返回true
+    	})
+```
+输出结果如下：
+```text
+=== RUN   TestUnMarshalJson
+--- PASS: TestUnMarshalJson (0.00s)
+    aslist_test.go:152: UnmarshalJson后遍历
+    aslist_test.go:154: 0 map[Age:121]
+    aslist_test.go:154: 1 map[Age:120]
+    aslist_test.go:154: 2 map[Age:23]
+    aslist_test.go:154: 3 map[Age:150]
+    aslist_test.go:154: 4 map[Age:69]
+PASS
+```
+
+### 反序列化json
+```golang
+    asList := NewAsList()
+	asList.Push(&B{Age: 121})
+	asList.Push(&B{Age: 120})
+	asList.Push(&B{Age: 23})
+	asList.Push(&B{Age: 150})
+	asList.Push(&B{Age: 69})
+	t.Log("第一次遍历")
+	asList.Range(func(index int, item interface{}) bool {
+		t.Log(index, item)
+		return false //如果要中断遍历，请返回true
+	})
+	asList.ClearTargets(func(index int, item interface{}) bool {
+		struct_a := item.(*B)
+		//把小于Age小于100的全部清除掉
+		if struct_a.Age < 100 {
+			return true
+		}
+		return false
+	})
+	t.Log("ClearTargets后遍历")
+	asList.Range(func(index int, item interface{}) bool {
+		t.Log(index, item)
+		return false //如果要中断遍历，请返回true
+	})
+	asList.Clear() //清除所有元素
+	t.Log("Clear后元素个数为", asList.Length())
+```
+输出结果如下：
+```text
+=== RUN   TestClear
+--- PASS: TestClear (0.00s)
+    aslist_test.go:166: 第一次遍历
+    aslist_test.go:168: 0 &{121}
+    aslist_test.go:168: 1 &{120}
+    aslist_test.go:168: 2 &{23}
+    aslist_test.go:168: 3 &{150}
+    aslist_test.go:168: 4 &{69}
+    aslist_test.go:179: ClearTargets后遍历
+    aslist_test.go:181: 0 &{121}
+    aslist_test.go:181: 1 &{120}
+    aslist_test.go:181: 2 &{150}
+    aslist_test.go:185: Clear后元素个数为 0
 PASS
 ```

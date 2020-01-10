@@ -1,6 +1,7 @@
 package aslist
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 )
@@ -31,8 +32,9 @@ func TestAsListSortWithCompareFunc(t *testing.T) {
 	asList.Push(A{Name: "我的名字长"})
 
 	t.Log("第一次遍历")
-	asList.Range(func(index int, item interface{}) {
+	asList.Range(func(index int, item interface{}) bool {
 		t.Log(index, item)
+		return false //如果要中断遍历，请返回true
 	})
 	asList.SortWithCompareFunc(func(a, b interface{}) bool {
 		struct_a := a.(A)
@@ -43,8 +45,9 @@ func TestAsListSortWithCompareFunc(t *testing.T) {
 		return false
 	})
 	t.Log("排序后遍历")
-	asList.Range(func(index int, item interface{}) {
+	asList.Range(func(index int, item interface{}) bool {
 		t.Log(index, item)
+		return false //如果要中断遍历，请返回true
 	})
 }
 
@@ -58,8 +61,9 @@ func TestStructPoint(t *testing.T) {
 	asList.Push(&A{Name: "我的名字长"})
 
 	t.Log("第一次遍历")
-	asList.Range(func(index int, item interface{}) {
+	asList.Range(func(index int, item interface{}) bool {
 		t.Log(index, item)
+		return false //如果要中断遍历，请返回true
 	})
 	asList.SortWithCompareFunc(func(a, b interface{}) bool {
 		struct_a := a.(*A)
@@ -67,11 +71,12 @@ func TestStructPoint(t *testing.T) {
 		if len(struct_a.Name) > len(struct_b.Name) {
 			return true
 		}
-		return false
+		return false //如果要中断遍历，请返回true
 	})
 	t.Log("排序后遍历")
-	asList.Range(func(index int, item interface{}) {
+	asList.Range(func(index int, item interface{}) bool {
 		t.Log(index, item)
+		return false //如果要中断遍历，请返回true
 	})
 }
 
@@ -84,13 +89,15 @@ func TestAutoSort(t *testing.T) {
 	asList.Push(&B{Age: 150})
 	asList.Push(&B{Age: 69})
 	t.Log("第一次遍历")
-	asList.Range(func(index int, item interface{}) {
+	asList.Range(func(index int, item interface{}) bool {
 		t.Log(index, item)
+		return false //如果要中断遍历，请返回true
 	})
 	asList.Sort()
 	t.Log("排序后遍历")
-	asList.Range(func(index int, item interface{}) {
+	asList.Range(func(index int, item interface{}) bool {
 		t.Log(index, item)
+		return false //如果要中断遍历，请返回true
 	})
 }
 
@@ -103,13 +110,15 @@ func TestQueue(t *testing.T) {
 	asList.Push(&B{Age: 150})
 	asList.Push(&B{Age: 69})
 	t.Log("第一次遍历")
-	asList.Range(func(index int, item interface{}) {
+	asList.Range(func(index int, item interface{}) bool {
 		t.Log(index, item)
+		return false //如果要中断遍历，请返回true
 	})
 	asList.Sort()
 	t.Log("排序后遍历")
-	asList.Range(func(index int, item interface{}) {
+	asList.Range(func(index int, item interface{}) bool {
 		t.Log(index, item)
+		return false //如果要中断遍历，请返回true
 	})
 	for i := 1; i < 10; i++ {
 		t.Log(fmt.Sprintf("第%d次pop:", i), asList.Pop())
@@ -131,4 +140,47 @@ func TestMarshalJson(t *testing.T) {
 	t.Log("RightPop:", asList.RightPop())
 	t.Log("LeftPop:", asList.LeftPop())
 	t.Log(string(asList.MarshalJson()))
+}
+
+func TestUnMarshalJson(t *testing.T) {
+	list := []interface{}{}
+	list = append(list, &B{Age: 121}, &B{Age: 120}, &B{Age: 23}, &B{Age: 150}, &B{Age: 69})
+	listJson, _ := json.Marshal(list)
+	//加载json
+	asList := NewAsList()
+	asList.UnmarshalJson(listJson)
+	t.Log("UnmarshalJson后遍历")
+	asList.Range(func(index int, item interface{}) bool {
+		t.Log(index, item)
+		return false //如果要中断遍历，请返回true
+	})
+}
+
+func TestClear(t *testing.T) {
+	asList := NewAsList()
+	asList.Push(&B{Age: 121})
+	asList.Push(&B{Age: 120})
+	asList.Push(&B{Age: 23})
+	asList.Push(&B{Age: 150})
+	asList.Push(&B{Age: 69})
+	t.Log("第一次遍历")
+	asList.Range(func(index int, item interface{}) bool {
+		t.Log(index, item)
+		return false //如果要中断遍历，请返回true
+	})
+	asList.ClearTargets(func(index int, item interface{}) bool {
+		struct_a := item.(*B)
+		//把小于Age小于100的全部清除掉
+		if struct_a.Age < 100 {
+			return true
+		}
+		return false
+	})
+	t.Log("ClearTargets后遍历")
+	asList.Range(func(index int, item interface{}) bool {
+		t.Log(index, item)
+		return false //如果要中断遍历，请返回true
+	})
+	asList.Clear() //清除所有元素
+	t.Log("Clear后元素个数为", asList.Length())
 }
