@@ -292,7 +292,7 @@ PASS
 PASS
 ```
 
-### 反序列化json
+### ClearTargets和Clear
 ```golang
     asList := NewAsList()
 	asList.Push(&B{Age: 121})
