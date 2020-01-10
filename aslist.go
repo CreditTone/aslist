@@ -33,11 +33,29 @@ func (self *AsList) MarshalJson() []byte {
 	return data
 }
 
-func (self *AsList) UnmarshalJson(data []byte) {
+func (self *AsList) UnmarshalJson(data []byte, isAppend bool, unSerialize func(itemData []byte) interface{}) error {
 	self.locker.Lock()
 	defer self.locker.Unlock()
-	self.list = []interface{}{}
-	json.Unmarshal(data, &self.list)
+	var err error
+	tempList := []map[string]interface{}{}
+	err = json.Unmarshal(data, &tempList)
+	if err != nil {
+		return err
+	}
+	list := []interface{}{}
+	for _, item := range tempList {
+		itemData, _ := json.Marshal(item)
+		val := unSerialize(itemData)
+		if val != nil {
+			list = append(list, val)
+		}
+	}
+	if isAppend {
+		self.list = append(self.list, list...)
+	} else {
+		self.list = list
+	}
+	return nil
 }
 
 func (self *AsList) Push(obj interface{}) {

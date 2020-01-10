@@ -268,27 +268,38 @@ PASS
 ### 反序列化json
 ```golang
 	list := []interface{}{}
-        list = append(list, &B{Age: 121}, &B{Age: 120}, &B{Age: 23}, &B{Age: 150}, &B{Age: 69})
-    	listJson, _ := json.Marshal(list)
-    	//加载json
-    	asList := NewAsList()
-    	asList.UnmarshalJson(listJson)
-    	t.Log("UnmarshalJson后遍历")
-    	asList.Range(func(index int, item interface{}) bool {
-    		t.Log(index, item)
-    		return false //如果要中断遍历，请返回true
-    	})
+	list = append(list, &B{Age: 121}, &B{Age: 120}, &B{Age: 23}, &B{Age: 150}, &B{Age: 69})
+	listJson, _ := json.Marshal(list)
+	//加载json
+	asList := NewAsList()
+	asList.Push(&B{Age: 89})
+	//true表示需要追加 unSerialize反序列化的函数
+	err := asList.UnmarshalJson(listJson, true, func(itemData []byte) interface{} {
+		item := new(B)
+		json.Unmarshal(itemData, item)
+		return item
+	})
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	t.Log("UnmarshalJson后遍历")
+	asList.Range(func(index int, item interface{}) bool {
+		t.Log(index, item)
+		return false //如果要中断遍历，请返回true
+	})
 ```
 输出结果如下：
 ```text
 === RUN   TestUnMarshalJson
 --- PASS: TestUnMarshalJson (0.00s)
-    aslist_test.go:152: UnmarshalJson后遍历
-    aslist_test.go:154: 0 map[Age:121]
-    aslist_test.go:154: 1 map[Age:120]
-    aslist_test.go:154: 2 map[Age:23]
-    aslist_test.go:154: 3 map[Age:150]
-    aslist_test.go:154: 4 map[Age:69]
+    aslist_test.go:163: UnmarshalJson后遍历
+    aslist_test.go:165: 0 &{89}
+    aslist_test.go:165: 1 &{121}
+    aslist_test.go:165: 2 &{120}
+    aslist_test.go:165: 3 &{23}
+    aslist_test.go:165: 4 &{150}
+    aslist_test.go:165: 5 &{69}
 PASS
 ```
 

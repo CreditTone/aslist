@@ -148,7 +148,17 @@ func TestUnMarshalJson(t *testing.T) {
 	listJson, _ := json.Marshal(list)
 	//加载json
 	asList := NewAsList()
-	asList.UnmarshalJson(listJson)
+	asList.Push(&B{Age: 89})
+	//true表示需要追加 unSerialize反序列化的函数
+	err := asList.UnmarshalJson(listJson, true, func(itemData []byte) interface{} {
+		item := new(B)
+		json.Unmarshal(itemData, item)
+		return item
+	})
+	if err != nil {
+		t.Error(err)
+		return
+	}
 	t.Log("UnmarshalJson后遍历")
 	asList.Range(func(index int, item interface{}) bool {
 		t.Log(index, item)
