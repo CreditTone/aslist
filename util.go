@@ -7,6 +7,7 @@ import (
 	"fmt"
 	log "github.com/CreditTone/colorfulog"
 	"reflect"
+	"strings"
 )
 
 func Encode(data interface{}) ([]byte, error) {
@@ -25,7 +26,26 @@ func SmartGanerateUniqueId(data interface{}) string {
 		log.Warn("SmartGanerateUniqueId", err)
 		return ""
 	}
-	typeBs := []byte(reflect.TypeOf(data).String())
+	typeStr := reflect.TypeOf(data).String()
+	typeBs := []byte(typeStr)
+	dataBytes := append(typeBs, bs...)
+	Md5Inst := md5.New()
+	Md5Inst.Write(dataBytes)
+	result := Md5Inst.Sum([]byte(""))
+	return fmt.Sprintf("%x", result)
+}
+
+func SmartGanerateUniqueIdWithIgnorePoint(data interface{}) string {
+	bs, err := Encode(data)
+	if err != nil {
+		log.Warn("SmartGanerateUniqueIdWithIgnorePoint", err)
+		return ""
+	}
+	typeStr := reflect.TypeOf(data).String()
+	if strings.HasPrefix(typeStr, "*") {
+		typeStr = typeStr[1:]
+	}
+	typeBs := []byte(typeStr)
 	dataBytes := append(typeBs, bs...)
 	Md5Inst := md5.New()
 	Md5Inst.Write(dataBytes)

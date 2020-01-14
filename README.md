@@ -222,7 +222,7 @@ func (self *B) Compare(a, b interface{}) bool {
 	return false
 }
 ```
-##### 6.1测试多态设计思路
+#### 6.1测试多态设计思路
 ```golang
 	asList := NewAsList()
 	asList.Push(&B{Age: 121})
@@ -261,7 +261,141 @@ func (self *B) Compare(a, b interface{}) bool {
 PASS
 ```
 
-### 7.队列操作
+### 7.实现唯一性校验（Set）功能
+```golang
+	asList := NewAsList()
+	//设置GanerateUniqueId函数，asList将会做唯一性校验
+	asList.GanerateUniqueId = func(i interface{}) string {
+		bi := i.(BInterface)
+		//假设以Age生成唯一id
+		return fmt.Sprintf("%d", bi.GetAge())
+	}
+	asList.Push(&B{Age: 121})
+	asList.Push(&B{Age: 120})
+	asList.Push(&B{Age: 23})
+	asList.Push(&B{Age: 150})
+	asList.Push(&B{Age: 69})
+	t.Log("测试唯一'性'功能😄，第一次遍历")
+	asList.Range(func(index int, item interface{}) bool {
+		t.Log(index, item)
+		return false //如果要中断遍历，请返回true
+	})
+	asList.Push(&B{Age: 123})
+	asList.Push(&B{Age: 120}) //重复
+	asList.Push(&B{Age: 23})  //重复
+	asList.Push(&B{Age: 150}) //重复
+	asList.Push(&B{Age: 96})
+	t.Log("测试唯一'性'功能😄，第二次遍历")
+	asList.Range(func(index int, item interface{}) bool {
+		t.Log(index, item)
+		return false //如果要中断遍历，请返回true
+	})
+```
+输出结果如下：
+```text
+=== RUN   TestGanerateUniqueId
+--- PASS: TestGanerateUniqueId (0.00s)
+    aslist_test.go:79: 测试唯一'性'功能😄，第一次遍历
+    aslist_test.go:81: 0 &{121}
+    aslist_test.go:81: 1 &{120}
+    aslist_test.go:81: 2 &{23}
+    aslist_test.go:81: 3 &{150}
+    aslist_test.go:81: 4 &{69}
+    aslist_test.go:89: 测试唯一'性'功能😄，第二次遍历
+    aslist_test.go:91: 0 &{121}
+    aslist_test.go:91: 1 &{120}
+    aslist_test.go:91: 2 &{23}
+    aslist_test.go:91: 3 &{150}
+    aslist_test.go:91: 4 &{69}
+    aslist_test.go:91: 5 &{123}
+    aslist_test.go:91: 6 &{96}
+PASS
+```
+#### 7.1也许你的结构体过于复杂，并且你不擅长写生成唯一id的函数。没有关系，aslist提供了两个通用的函数供你选择
+```golang
+	b1 := B{Age: 1}
+	b2 := &B{Age: 1}
+	b3 := B{Age: 2}
+	b4 := B{Age: 1}
+	t.Log("SmartGanerateUniqueId,不忽略指针和结构体类型生成唯一id")
+	//不忽略指针和结构体类型生成唯一id
+	t.Log("b1", SmartGanerateUniqueId(b1))
+	t.Log("b2", SmartGanerateUniqueId(b2))
+	t.Log("b3", SmartGanerateUniqueId(b3))
+	t.Log("b4", SmartGanerateUniqueId(b4))
+
+	t.Log("SmartGanerateUniqueIdWithIgnorePoint,忽略指针和结构体类型生成唯一id")
+	//忽略指针和结构体类型生成唯一id
+	t.Log("b1", SmartGanerateUniqueIdWithIgnorePoint(b1))
+	t.Log("b2", SmartGanerateUniqueIdWithIgnorePoint(b2))
+	t.Log("b3", SmartGanerateUniqueIdWithIgnorePoint(b3))
+	t.Log("b4", SmartGanerateUniqueIdWithIgnorePoint(b4))
+```
+输出结果如下：
+```text
+=== RUN   TestSmartGanerateUniqueId
+--- PASS: TestSmartGanerateUniqueId (0.00s)
+    aslist_test.go:51: SmartGanerateUniqueId,不忽略指针和结构体类型生成唯一id
+    aslist_test.go:53: b1 40cf310cccaa86d9e0acc86a4a5e1fe3
+    aslist_test.go:54: b2 e65e33466c73b3c7ef6692759eb0c61b
+    aslist_test.go:55: b3 a3628aa02f4eda73de8106404d497476
+    aslist_test.go:56: b4 40cf310cccaa86d9e0acc86a4a5e1fe3
+    aslist_test.go:58: SmartGanerateUniqueIdWithIgnorePoint,忽略指针和结构体类型生成唯一id
+    aslist_test.go:60: b1 40cf310cccaa86d9e0acc86a4a5e1fe3
+    aslist_test.go:61: b2 40cf310cccaa86d9e0acc86a4a5e1fe3
+    aslist_test.go:62: b3 a3628aa02f4eda73de8106404d497476
+    aslist_test.go:63: b4 40cf310cccaa86d9e0acc86a4a5e1fe3
+PASS
+```
+
+#### 7.2测试aslist.SmartGanerateUniqueId
+```golang
+	asList := NewAsList()
+	//设置GanerateUniqueId函数，asList将会做唯一性校验
+	asList.GanerateUniqueId = SmartGanerateUniqueId //aslist.SmartGanerateUniqueId，这里我放的全是指针类型所以不必用SmartGanerateUniqueIdWithIgnorePoint。
+	asList.Push(&B{Age: 121})
+	asList.Push(&B{Age: 120})
+	asList.Push(&B{Age: 23})
+	asList.Push(&B{Age: 150})
+	asList.Push(&B{Age: 69})
+	t.Log("测试唯一'性'功能😄，第一次遍历")
+	asList.Range(func(index int, item interface{}) bool {
+		t.Log(index, item)
+		return false //如果要中断遍历，请返回true
+	})
+	asList.Push(&B{Age: 123})
+	asList.Push(&B{Age: 120}) //重复
+	asList.Push(&B{Age: 23})  //重复
+	asList.Push(&B{Age: 150}) //重复
+	asList.Push(&B{Age: 96})
+	t.Log("测试唯一'性'功能😄，第二次遍历")
+	asList.Range(func(index int, item interface{}) bool {
+		t.Log(index, item)
+		return false //如果要中断遍历，请返回true
+	})
+```
+输出结果如下：
+```text
+=== RUN   TestGanerateUniqueIdWithSmartGanerateUniqueId
+--- PASS: TestGanerateUniqueIdWithSmartGanerateUniqueId (0.00s)
+    aslist_test.go:105: 测试唯一'性'功能😄，第一次遍历
+    aslist_test.go:107: 0 &{121}
+    aslist_test.go:107: 1 &{120}
+    aslist_test.go:107: 2 &{23}
+    aslist_test.go:107: 3 &{150}
+    aslist_test.go:107: 4 &{69}
+    aslist_test.go:115: 测试唯一'性'功能😄，第二次遍历
+    aslist_test.go:117: 0 &{121}
+    aslist_test.go:117: 1 &{120}
+    aslist_test.go:117: 2 &{23}
+    aslist_test.go:117: 3 &{150}
+    aslist_test.go:117: 4 &{69}
+    aslist_test.go:117: 5 &{123}
+    aslist_test.go:117: 6 &{96}
+PASS
+```
+
+### 8.队列操作
 ```golang
 	asList := NewAsList()
 	asList.Push(&B{Age: 121})
@@ -312,7 +446,7 @@ PASS
 PASS
 ```
 
-### 8.序列化为json
+### 9.序列化为json
 ```golang
 	asList := NewAsList()
 	asList.Push(&B{Age: 121})
@@ -343,7 +477,7 @@ PASS
 PASS
 ```
 
-### 9.反序列化json
+### 10.反序列化json
 ```golang
 	list := []interface{}{}
 	list = append(list, &B{Age: 121}, &B{Age: 120}, &B{Age: 23}, &B{Age: 150}, &B{Age: 69})
@@ -381,7 +515,7 @@ PASS
 PASS
 ```
 
-### 10.ClearTargets和Clear
+### 11.ClearTargets和Clear
 ```golang
     asList := NewAsList()
 	asList.Push(&B{Age: 121})

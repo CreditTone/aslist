@@ -43,6 +43,82 @@ func (self *B) Compare(a, b interface{}) bool {
 	return false
 }
 
+func TestSmartGanerateUniqueId(t *testing.T) {
+	b1 := B{Age: 1}
+	b2 := &B{Age: 1}
+	b3 := B{Age: 2}
+	b4 := B{Age: 1}
+	t.Log("SmartGanerateUniqueId,不忽略指针和结构体类型生成唯一id")
+	//不忽略指针和结构体类型生成唯一id
+	t.Log("b1", SmartGanerateUniqueId(b1))
+	t.Log("b2", SmartGanerateUniqueId(b2))
+	t.Log("b3", SmartGanerateUniqueId(b3))
+	t.Log("b4", SmartGanerateUniqueId(b4))
+
+	t.Log("SmartGanerateUniqueIdWithIgnorePoint,忽略指针和结构体类型生成唯一id")
+	//忽略指针和结构体类型生成唯一id
+	t.Log("b1", SmartGanerateUniqueIdWithIgnorePoint(b1))
+	t.Log("b2", SmartGanerateUniqueIdWithIgnorePoint(b2))
+	t.Log("b3", SmartGanerateUniqueIdWithIgnorePoint(b3))
+	t.Log("b4", SmartGanerateUniqueIdWithIgnorePoint(b4))
+}
+
+func TestGanerateUniqueId(t *testing.T) {
+	asList := NewAsList()
+	//设置GanerateUniqueId函数，asList将会做唯一性校验
+	asList.GanerateUniqueId = func(i interface{}) string {
+		bi := i.(BInterface)
+		//假设以Age生成唯一id
+		return fmt.Sprintf("%d", bi.GetAge())
+	}
+	asList.Push(&B{Age: 121})
+	asList.Push(&B{Age: 120})
+	asList.Push(&B{Age: 23})
+	asList.Push(&B{Age: 150})
+	asList.Push(&B{Age: 69})
+	t.Log("测试唯一'性'功能😄，第一次遍历")
+	asList.Range(func(index int, item interface{}) bool {
+		t.Log(index, item)
+		return false //如果要中断遍历，请返回true
+	})
+	asList.Push(&B{Age: 123})
+	asList.Push(&B{Age: 120}) //重复
+	asList.Push(&B{Age: 23})  //重复
+	asList.Push(&B{Age: 150}) //重复
+	asList.Push(&B{Age: 96})
+	t.Log("测试唯一'性'功能😄，第二次遍历")
+	asList.Range(func(index int, item interface{}) bool {
+		t.Log(index, item)
+		return false //如果要中断遍历，请返回true
+	})
+}
+
+func TestGanerateUniqueIdWithSmartGanerateUniqueId(t *testing.T) {
+	asList := NewAsList()
+	//设置GanerateUniqueId函数，asList将会做唯一性校验
+	asList.GanerateUniqueId = SmartGanerateUniqueId //aslist.SmartGanerateUniqueId，这里我放的全是指针类型所以不必用SmartGanerateUniqueIdWithIgnorePoint。
+	asList.Push(&B{Age: 121})
+	asList.Push(&B{Age: 120})
+	asList.Push(&B{Age: 23})
+	asList.Push(&B{Age: 150})
+	asList.Push(&B{Age: 69})
+	t.Log("测试唯一'性'功能😄，第一次遍历")
+	asList.Range(func(index int, item interface{}) bool {
+		t.Log(index, item)
+		return false //如果要中断遍历，请返回true
+	})
+	asList.Push(&B{Age: 123})
+	asList.Push(&B{Age: 120}) //重复
+	asList.Push(&B{Age: 23})  //重复
+	asList.Push(&B{Age: 150}) //重复
+	asList.Push(&B{Age: 96})
+	t.Log("测试唯一'性'功能😄，第二次遍历")
+	asList.Range(func(index int, item interface{}) bool {
+		t.Log(index, item)
+		return false //如果要中断遍历，请返回true
+	})
+}
+
 func TestAsListSortWithCompareFunc(t *testing.T) {
 	asList := NewAsList()
 	asList.Push(A{Name: "我的名字好长"})
@@ -233,22 +309,4 @@ func TestClear(t *testing.T) {
 	})
 	asList.Clear() //清除所有元素
 	t.Log("Clear后元素个数为", asList.Length())
-}
-
-func TestGanerateUniqueId(t *testing.T) {
-	asList := NewAsList()
-	asList.GanerateUniqueId = func(i interface{}) string {
-
-		return ""
-	}
-	asList.Push(&B{Age: 121})
-	asList.Push(&B{Age: 120})
-	asList.Push(&B{Age: 23})
-	asList.Push(&B{Age: 150})
-	asList.Push(&B{Age: 69})
-	t.Log("测试唯一'性'功能😄")
-	asList.Range(func(index int, item interface{}) bool {
-		t.Log(index, item)
-		return false //如果要中断遍历，请返回true
-	})
 }
