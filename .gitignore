@@ -8,6 +8,7 @@
 /app/export/*.csv
 /cmd/*.csv
 *.idea/
+/go.mod
 /vendor
 /kipping...
 *.DS_Store
