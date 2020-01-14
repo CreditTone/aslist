@@ -20,6 +20,13 @@ func Encode(data interface{}) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+func bytesToMd5Hex(dataBytes []byte) string {
+	Md5Inst := md5.New()
+	Md5Inst.Write(dataBytes)
+	result := Md5Inst.Sum([]byte(""))
+	return fmt.Sprintf("%x", result)
+}
+
 func SmartGanerateUniqueId(data interface{}) string {
 	bs, err := Encode(data)
 	if err != nil {
@@ -29,10 +36,7 @@ func SmartGanerateUniqueId(data interface{}) string {
 	typeStr := reflect.TypeOf(data).String()
 	typeBs := []byte(typeStr)
 	dataBytes := append(typeBs, bs...)
-	Md5Inst := md5.New()
-	Md5Inst.Write(dataBytes)
-	result := Md5Inst.Sum([]byte(""))
-	return fmt.Sprintf("%x", result)
+	return bytesToMd5Hex(dataBytes)
 }
 
 func SmartGanerateUniqueIdWithIgnorePoint(data interface{}) string {
@@ -47,8 +51,15 @@ func SmartGanerateUniqueIdWithIgnorePoint(data interface{}) string {
 	}
 	typeBs := []byte(typeStr)
 	dataBytes := append(typeBs, bs...)
-	Md5Inst := md5.New()
-	Md5Inst.Write(dataBytes)
-	result := Md5Inst.Sum([]byte(""))
-	return fmt.Sprintf("%x", result)
+	return bytesToMd5Hex(dataBytes)
+}
+
+func MultiFieldGanerateUniqueId(ganerateUniqueId func(data interface{}) string, fields ...interface{}) string {
+	finallyId := ""
+	for _, field := range fields {
+		if field != nil {
+			finallyId += ganerateUniqueId(field)
+		}
+	}
+	return bytesToMd5Hex([]byte(finallyId))
 }
