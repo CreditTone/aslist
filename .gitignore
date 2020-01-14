@@ -9,7 +9,9 @@
 /cmd/*.csv
 *.idea/
 /vendor
-/go.mod
 /kipping...
 *.DS_Store
 *.log
+*./app/upload/img/*.jpeg
+*./app/upload/img/*.jpg
+*./app/upload/img/*.gif
