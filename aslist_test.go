@@ -76,7 +76,7 @@ func TestGanerateUniqueId(t *testing.T) {
 	asList.Push(&B{Age: 23})
 	asList.Push(&B{Age: 150})
 	asList.Push(&B{Age: 69})
-	t.Log("测试唯一'性'功能😄，第一次遍历")
+	t.Log("测试唯一性功能，第一次遍历")
 	asList.Range(func(index int, item interface{}) bool {
 		t.Log(index, item)
 		return false //如果要中断遍历，请返回true
@@ -86,7 +86,7 @@ func TestGanerateUniqueId(t *testing.T) {
 	asList.Push(&B{Age: 23})  //重复
 	asList.Push(&B{Age: 150}) //重复
 	asList.Push(&B{Age: 96})
-	t.Log("测试唯一'性'功能😄，第二次遍历")
+	t.Log("测试唯一性功能，第二次遍历")
 	asList.Range(func(index int, item interface{}) bool {
 		t.Log(index, item)
 		return false //如果要中断遍历，请返回true
@@ -102,7 +102,7 @@ func TestGanerateUniqueIdWithSmartGanerateUniqueId(t *testing.T) {
 	asList.Push(&B{Age: 23})
 	asList.Push(&B{Age: 150})
 	asList.Push(&B{Age: 69})
-	t.Log("测试唯一'性'功能😄，第一次遍历")
+	t.Log("测试唯一性功能，第一次遍历")
 	asList.Range(func(index int, item interface{}) bool {
 		t.Log(index, item)
 		return false //如果要中断遍历，请返回true
@@ -112,7 +112,7 @@ func TestGanerateUniqueIdWithSmartGanerateUniqueId(t *testing.T) {
 	asList.Push(&B{Age: 23})  //重复
 	asList.Push(&B{Age: 150}) //重复
 	asList.Push(&B{Age: 96})
-	t.Log("测试唯一'性'功能😄，第二次遍历")
+	t.Log("测试唯一性功能，第二次遍历")
 	asList.Range(func(index int, item interface{}) bool {
 		t.Log(index, item)
 		return false //如果要中断遍历，请返回true

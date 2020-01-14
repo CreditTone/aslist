@@ -27,39 +27,31 @@ func bytesToMd5Hex(dataBytes []byte) string {
 	return fmt.Sprintf("%x", result)
 }
 
-func SmartGanerateUniqueId(data interface{}) string {
-	bs, err := Encode(data)
-	if err != nil {
-		log.Warn("SmartGanerateUniqueId", err)
-		return ""
+func MultiFieldsGanerateUniqueId(ignorePoint bool, datas ...interface{}) string {
+	finallyBytes := []byte{}
+	for _, data := range datas {
+		if data != nil {
+			bs, err := Encode(data)
+			if err != nil {
+				log.Warn("MultiGanerateUniqueId", err)
+				continue
+			}
+			typeStr := reflect.TypeOf(data).String()
+			if ignorePoint && strings.HasPrefix(typeStr, "*") {
+				typeStr = typeStr[1:]
+			}
+			typeBs := []byte(typeStr)
+			finallyBytes = append(finallyBytes, bs...)
+			finallyBytes = append(finallyBytes, typeBs...)
+		}
 	}
-	typeStr := reflect.TypeOf(data).String()
-	typeBs := []byte(typeStr)
-	dataBytes := append(typeBs, bs...)
-	return bytesToMd5Hex(dataBytes)
+	return bytesToMd5Hex(finallyBytes)
+}
+
+func SmartGanerateUniqueId(data interface{}) string {
+	return MultiFieldsGanerateUniqueId(false, data)
 }
 
 func SmartGanerateUniqueIdWithIgnorePoint(data interface{}) string {
-	bs, err := Encode(data)
-	if err != nil {
-		log.Warn("SmartGanerateUniqueIdWithIgnorePoint", err)
-		return ""
-	}
-	typeStr := reflect.TypeOf(data).String()
-	if strings.HasPrefix(typeStr, "*") {
-		typeStr = typeStr[1:]
-	}
-	typeBs := []byte(typeStr)
-	dataBytes := append(typeBs, bs...)
-	return bytesToMd5Hex(dataBytes)
-}
-
-func MultiFieldGanerateUniqueId(ganerateUniqueId func(data interface{}) string, fields ...interface{}) string {
-	finallyId := ""
-	for _, field := range fields {
-		if field != nil {
-			finallyId += ganerateUniqueId(field)
-		}
-	}
-	return bytesToMd5Hex([]byte(finallyId))
+	return MultiFieldsGanerateUniqueId(true, data)
 }
