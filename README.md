@@ -358,7 +358,7 @@ PASS
 	asList.Push(&B{Age: 23})
 	asList.Push(&B{Age: 150})
 	asList.Push(&B{Age: 69})
-	t.Log("测试唯一'性'功能😄，第一次遍历")
+	t.Log("测试唯一性功能，第一次遍历")
 	asList.Range(func(index int, item interface{}) bool {
 		t.Log(index, item)
 		return false //如果要中断遍历，请返回true
@@ -368,7 +368,7 @@ PASS
 	asList.Push(&B{Age: 23})  //重复
 	asList.Push(&B{Age: 150}) //重复
 	asList.Push(&B{Age: 96})
-	t.Log("测试唯一'性'功能😄，第二次遍历")
+	t.Log("测试唯一性功能，第二次遍历")
 	asList.Range(func(index int, item interface{}) bool {
 		t.Log(index, item)
 		return false //如果要中断遍历，请返回true
@@ -378,13 +378,13 @@ PASS
 ```text
 === RUN   TestGanerateUniqueIdWithSmartGanerateUniqueId
 --- PASS: TestGanerateUniqueIdWithSmartGanerateUniqueId (0.00s)
-    aslist_test.go:105: 测试唯一'性'功能😄，第一次遍历
+    aslist_test.go:105: 测试唯一性功能，第一次遍历
     aslist_test.go:107: 0 &{121}
     aslist_test.go:107: 1 &{120}
     aslist_test.go:107: 2 &{23}
     aslist_test.go:107: 3 &{150}
     aslist_test.go:107: 4 &{69}
-    aslist_test.go:115: 测试唯一'性'功能😄，第二次遍历
+    aslist_test.go:115: 测试唯一性功能，第二次遍历
     aslist_test.go:117: 0 &{121}
     aslist_test.go:117: 1 &{120}
     aslist_test.go:117: 2 &{23}
