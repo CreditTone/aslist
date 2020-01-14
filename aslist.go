@@ -4,20 +4,42 @@ import (
 	"encoding/json"
 	"errors"
 	log "github.com/CreditTone/colorfulog"
+	"gopkg.in/fatih/set.v0"
 	"reflect"
 	"sync"
 )
 
 type AsList struct {
-	locker *sync.Mutex
-	list   []interface{}
+	locker           *sync.Mutex
+	list             []interface{}
+	GanerateUniqueId func(interface{}) string
+	UniqueSet        set.Interface
 }
 
 func NewAsList() *AsList {
 	return &AsList{
 		&sync.Mutex{},
 		[]interface{}{},
+		nil,
+		set.New(set.ThreadSafe),
 	}
+}
+
+func (self *AsList) Has(obj interface{}) bool {
+	if self.GanerateUniqueId != nil {
+		return self.UniqueSet.Has(self.GanerateUniqueId(obj))
+	} else {
+		ret := false
+		self.Range(func(index int, item interface{}) bool {
+			if obj == item {
+				ret = true
+				return true
+			}
+			return false
+		})
+		return ret
+	}
+	return false
 }
 
 func (self *AsList) Length() int {
@@ -34,8 +56,6 @@ func (self *AsList) MarshalJson() []byte {
 }
 
 func (self *AsList) UnmarshalJson(data []byte, isAppend bool, unSerialize func(itemData []byte) interface{}) error {
-	self.locker.Lock()
-	defer self.locker.Unlock()
 	var err error
 	tempList := []map[string]interface{}{}
 	err = json.Unmarshal(data, &tempList)
@@ -51,9 +71,27 @@ func (self *AsList) UnmarshalJson(data []byte, isAppend bool, unSerialize func(i
 		}
 	}
 	if isAppend {
-		self.list = append(self.list, list...)
+		for _, appendItem := range list {
+			self.Push(appendItem)
+		}
 	} else {
-		self.list = list
+		self.locker.Lock()
+		defer self.locker.Unlock()
+		if self.GanerateUniqueId != nil {
+			self.UniqueSet.Clear()
+		}
+		self.list = []interface{}{}
+		for _, item := range list {
+			if self.GanerateUniqueId != nil {
+				id := self.GanerateUniqueId(item)
+				if !self.UniqueSet.Has(id) {
+					self.UniqueSet.Add(id)
+					self.list = append(self.list, item)
+				}
+			} else {
+				self.list = append(self.list, item)
+			}
+		}
 	}
 	return nil
 }
@@ -67,16 +105,37 @@ func (self *AsList) Pop() interface{} {
 }
 
 func (self *AsList) RightPush(obj interface{}) {
-	self.locker.Lock()
-	defer self.locker.Unlock()
-	self.list = append(self.list, obj)
+	if obj != nil {
+		self.locker.Lock()
+		defer self.locker.Unlock()
+		if self.GanerateUniqueId != nil {
+			id := self.GanerateUniqueId(obj)
+			if !self.UniqueSet.Has(id) {
+				self.UniqueSet.Add(id)
+				self.list = append(self.list, obj)
+			}
+		} else {
+			self.list = append(self.list, obj)
+		}
+	}
+
 }
 
 func (self *AsList) LeftPush(obj interface{}) {
-	self.locker.Lock()
-	defer self.locker.Unlock()
-	newList := []interface{}{obj}
-	self.list = append(newList, self.list...)
+	if obj != nil {
+		self.locker.Lock()
+		defer self.locker.Unlock()
+		newList := []interface{}{obj}
+		if self.GanerateUniqueId != nil {
+			id := self.GanerateUniqueId(obj)
+			if !self.UniqueSet.Has(id) {
+				self.UniqueSet.Add(id)
+				self.list = append(newList, self.list...)
+			}
+		} else {
+			self.list = append(newList, self.list...)
+		}
+	}
 }
 
 func (self *AsList) RightPop() interface{} {
@@ -91,7 +150,9 @@ func (self *AsList) RightPop() interface{} {
 		} else {
 			self.list = self.list[:lastIndex]
 		}
-
+		if self.GanerateUniqueId != nil {
+			self.UniqueSet.Remove(self.GanerateUniqueId(lastItem))
+		}
 		return lastItem
 	}
 	return nil
@@ -108,6 +169,9 @@ func (self *AsList) LeftPop() interface{} {
 			self.list = []interface{}{}
 		} else {
 			self.list = self.list[1:]
+		}
+		if self.GanerateUniqueId != nil {
+			self.UniqueSet.Remove(self.GanerateUniqueId(firstItem))
 		}
 		return firstItem
 	}
@@ -128,6 +192,7 @@ func (self *AsList) Clear() {
 	self.locker.Lock()
 	defer self.locker.Unlock()
 	self.list = []interface{}{}
+	self.UniqueSet.Clear()
 }
 
 func (self *AsList) ClearTargets(clearTargetsFunc func(index int, item interface{}) bool) {
@@ -137,6 +202,10 @@ func (self *AsList) ClearTargets(clearTargetsFunc func(index int, item interface
 	for i, item := range self.list {
 		if !clearTargetsFunc(i, item) {
 			nlist = append(nlist, item)
+		} else {
+			if self.GanerateUniqueId != nil {
+				self.UniqueSet.Remove(self.GanerateUniqueId(item))
+			}
 		}
 	}
 	self.list = nlist
@@ -148,15 +217,6 @@ func (self *AsList) checkSortCondition() (Comparator, error) {
 	var ok bool
 	if comparator, ok = self.list[0].(Comparator); !ok {
 		return nil, errors.New("类型" + firstType.String() + "必须实现aslist.Comparator接口，才可以使用Sort，或者你也可以使用SortWithCompareFunc动态传入自定义比较函数。")
-	}
-	for i, item := range self.list {
-		if i == 0 {
-			continue
-		}
-		itemType := reflect.TypeOf(item)
-		if firstType != itemType {
-			return nil, errors.New("Sort方法不支持不同类型 1." + firstType.String() + " 2." + itemType.String() + " 进行排序")
-		}
 	}
 	return comparator, nil
 }
@@ -175,7 +235,6 @@ func (self *AsList) Sort() {
 func (self *AsList) SortWithCompareFunc(compare func(a, b interface{}) bool) {
 	self.locker.Lock()
 	defer self.locker.Unlock()
-	//冒泡排序
 	loopTimes := 0
 	happendSwop := false
 	newslen := len(self.list)
@@ -183,17 +242,14 @@ func (self *AsList) SortWithCompareFunc(compare func(a, b interface{}) bool) {
 		happendSwop = false
 		for j := newslen - 1; j > i; j-- {
 			loopTimes++
-			//大分数，置前
-			backedItem := self.list[j]  //后项
-			frontItem := self.list[j-1] //前项
+			backedItem := self.list[j]
+			frontItem := self.list[j-1]
 			if compare(backedItem, frontItem) {
-				//交换位置
 				happendSwop = true
 				self.list[j-1] = backedItem
 				self.list[j] = frontItem
 			}
 		}
-		//没有发生交换位置说明已经是顺序了
 		if happendSwop == false {
 			break
 		}

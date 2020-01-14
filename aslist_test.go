@@ -14,10 +14,30 @@ type B struct {
 	Age int
 }
 
+//定义一个BInterface来实现指针和结构体的多态
+type BInterface interface {
+	GetAge() int
+}
+
+//实现BInterface定义的方法，注意(self B)不能是(self *B)
+func (self B) GetAge() int {
+	return self.Age
+}
+
+//func (self *B) Compare(a, b interface{}) bool {
+//	obj_a := a.(*B)
+//	obj_b := b.(*B)
+//	if obj_a.Age > obj_b.Age {
+//		return true
+//	}
+//	return false
+//}
+
+//使用多态接口实现类型的统一转换
 func (self *B) Compare(a, b interface{}) bool {
-	obj_a := a.(*B)
-	obj_b := b.(*B)
-	if obj_a.Age > obj_b.Age {
+	obj_a := a.(BInterface)
+	obj_b := b.(BInterface)
+	if obj_a.GetAge() > obj_b.GetAge() {
 		return true
 	}
 	return false
@@ -88,6 +108,26 @@ func TestAutoSort(t *testing.T) {
 	asList.Push(&B{Age: 23})
 	asList.Push(&B{Age: 150})
 	asList.Push(&B{Age: 69})
+	t.Log("第一次遍历")
+	asList.Range(func(index int, item interface{}) bool {
+		t.Log(index, item)
+		return false //如果要中断遍历，请返回true
+	})
+	asList.Sort()
+	t.Log("排序后遍历")
+	asList.Range(func(index int, item interface{}) bool {
+		t.Log(index, item)
+		return false //如果要中断遍历，请返回true
+	})
+}
+
+func TestPolymorphic(t *testing.T) {
+	asList := NewAsList()
+	asList.Push(&B{Age: 121})
+	asList.Push(B{Age: 120})
+	asList.Push(&B{Age: 23})
+	asList.Push(B{Age: 150})
+	asList.Push(B{Age: 69})
 	t.Log("第一次遍历")
 	asList.Range(func(index int, item interface{}) bool {
 		t.Log(index, item)
@@ -193,4 +233,22 @@ func TestClear(t *testing.T) {
 	})
 	asList.Clear() //清除所有元素
 	t.Log("Clear后元素个数为", asList.Length())
+}
+
+func TestGanerateUniqueId(t *testing.T) {
+	asList := NewAsList()
+	asList.GanerateUniqueId = func(i interface{}) string {
+
+		return ""
+	}
+	asList.Push(&B{Age: 121})
+	asList.Push(&B{Age: 120})
+	asList.Push(&B{Age: 23})
+	asList.Push(&B{Age: 150})
+	asList.Push(&B{Age: 69})
+	t.Log("测试唯一'性'功能😄")
+	asList.Range(func(index int, item interface{}) bool {
+		t.Log(index, item)
+		return false //如果要中断遍历，请返回true
+	})
 }

@@ -15,6 +15,10 @@
 ## 快速开始
 
 	go get -u github.com/CreditTone/aslist
+	
+## 如果你使用gomod管理依赖
+
+	go get -u github.com/CreditTone/aslist@master
 
 ### 导入
 ```golang
@@ -30,12 +34,12 @@ type A struct {
 }
 ```
 
-### 创建aslist
+### 1.创建aslist
 ```golang
 	asList := NewAsList()
 ```
 
-### push元素
+### 2.push元素
 ```golang
 	asList.Push(A{Name: "我的名字好长"})
 	asList.Push(A{Name: "我名长"})
@@ -44,7 +48,7 @@ type A struct {
 	asList.Push(A{Name: "我的名字长"})
 ```
 
-### 使用SortWithCompareFunc传入自定义函数排序
+### 3.使用SortWithCompareFunc传入自定义函数排序
 ```golang
 	asList := NewAsList()
 	asList.Push(A{Name: "我的名字好长"})
@@ -91,7 +95,7 @@ type A struct {
 PASS
 ```
 
-### 使用指针结构做元素也可以
+### 4.使用指针结构做元素也可以
 ```golang
 	asList := NewAsList()
 	asList.Push(&A{Name: "我的名字好长"})
@@ -136,7 +140,7 @@ PASS
 PASS
 ```
 
-### 数据结构实现Compare(a, b interface{}) bool方法可直接调用Sort排序
+### 5.数据结构实现Compare(a, b interface{}) bool方法可直接调用Sort排序
 ```golang
 type B struct {
 	Age int
@@ -190,7 +194,101 @@ func (self *B) Compare(a, b interface{}) bool {
 PASS
 ```
 
-### 队列操作
+### 6.当你的AsList当中指针和结构体同时存在怎么办？这里教你一个技巧巧妙的解决这个问题
+```golang
+//重新定义结构
+type B struct {
+	Age int
+}
+
+//定义一个BInterface来实现指针和结构体的多态
+type BInterface interface {
+	GetAge() int
+}
+
+//实现BInterface定义的方法，注意必须是(self B)不能是(self *B)。否则不能做到多态调用
+func (self B) GetAge() int {
+	return self.Age
+}
+
+
+//使用多态接口实现类型的统一转换
+func (self *B) Compare(a, b interface{}) bool {
+	obj_a := a.(BInterface)
+	obj_b := b.(BInterface)
+	if obj_a.GetAge() > obj_b.GetAge() {
+		return true
+	}
+	return false
+}
+```
+```golang
+//重新定义结构
+type B struct {
+	Age int
+}
+
+//定义一个BInterface来实现指针和结构体的多态
+type BInterface interface {
+	GetAge() int
+}
+
+//实现BInterface定义的方法，注意必须是(self B)不能是(self *B)。否则不能做到多态调用
+func (self B) GetAge() int {
+	return self.Age
+}
+
+
+//使用多态接口实现类型的统一转换
+func (self *B) Compare(a, b interface{}) bool {
+	obj_a := a.(BInterface)
+	obj_b := b.(BInterface)
+	if obj_a.GetAge() > obj_b.GetAge() {
+		return true
+	}
+	return false
+}
+```
+##### 6.1测试多态设计思路
+```golang
+	asList := NewAsList()
+	asList.Push(&B{Age: 121})
+	asList.Push(B{Age: 120})
+	asList.Push(&B{Age: 23})
+	asList.Push(B{Age: 150})
+	asList.Push(B{Age: 69})
+	t.Log("第一次遍历")
+	asList.Range(func(index int, item interface{}) bool {
+		t.Log(index, item)
+		return false //如果要中断遍历，请返回true
+	})
+	asList.Sort()
+	t.Log("排序后遍历")
+	asList.Range(func(index int, item interface{}) bool {
+		t.Log(index, item)
+		return false //如果要中断遍历，请返回true
+	})
+```
+输出结果如下：
+```text
+=== RUN   TestPolymorphic
+--- PASS: TestPolymorphic (0.00s)
+    aslist_test.go:134: 第一次遍历
+    aslist_test.go:136: 0 &{121}
+    aslist_test.go:136: 1 {120}
+    aslist_test.go:136: 2 &{23}
+    aslist_test.go:136: 3 {150}
+    aslist_test.go:136: 4 {69}
+    aslist_test.go:140: 排序后遍历
+    aslist_test.go:142: 0 {150}
+    aslist_test.go:142: 1 &{121}
+    aslist_test.go:142: 2 {120}
+    aslist_test.go:142: 3 {69}
+    aslist_test.go:142: 4 &{23}
+PASS
+```
+
+### 7.队列操作
 ```golang
 	asList := NewAsList()
 	asList.Push(&B{Age: 121})
@@ -241,7 +339,7 @@ PASS
 PASS
 ```
 
-### 序列化为json
+### 8.序列化为json
 ```golang
 	asList := NewAsList()
 	asList.Push(&B{Age: 121})
@@ -272,7 +370,7 @@ PASS
 PASS
 ```
 
-### 反序列化json
+### 9.反序列化json
 ```golang
 	list := []interface{}{}
 	list = append(list, &B{Age: 121}, &B{Age: 120}, &B{Age: 23}, &B{Age: 150}, &B{Age: 69})
@@ -310,7 +408,7 @@ PASS
 PASS
 ```
 
-### ClearTargets和Clear
+### 10.ClearTargets和Clear
 ```golang
     asList := NewAsList()
 	asList.Push(&B{Age: 121})
