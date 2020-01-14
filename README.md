@@ -222,33 +222,6 @@ func (self *B) Compare(a, b interface{}) bool {
 	return false
 }
 ```
-```golang
-//重新定义结构
-type B struct {
-	Age int
-}
-
-//定义一个BInterface来实现指针和结构体的多态
-type BInterface interface {
-	GetAge() int
-}
-
-//实现BInterface定义的方法，注意必须是(self B)不能是(self *B)。否则不能做到多态调用
-func (self B) GetAge() int {
-	return self.Age
-}
-
-
-//使用多态接口实现类型的统一转换
-func (self *B) Compare(a, b interface{}) bool {
-	obj_a := a.(BInterface)
-	obj_b := b.(BInterface)
-	if obj_a.GetAge() > obj_b.GetAge() {
-		return true
-	}
-	return false
-}
-```
 ##### 6.1测试多态设计思路
 ```golang
 	asList := NewAsList()
