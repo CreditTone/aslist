@@ -282,6 +282,29 @@ func TestUnMarshalJson(t *testing.T) {
 	})
 }
 
+func TestUnMarshalJson2Int(t *testing.T) {
+	list := []int{1, 2, 3, 4, 5, 6}
+	listJson, _ := json.Marshal(list)
+	//加载json
+	asList := NewAsList()
+	asList.Push(0)
+	//true表示需要追加 unSerialize反序列化的函数
+	err := asList.UnmarshalJson(listJson, true, func(itemData []byte) interface{} {
+		var originInt int
+		json.Unmarshal(itemData, &originInt)
+		return originInt
+	})
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	t.Log("UnmarshalJson后遍历")
+	asList.Range(func(index int, item interface{}) bool {
+		t.Log(item)
+		return false //如果要中断遍历，请返回true
+	})
+}
+
 func TestClear(t *testing.T) {
 	asList := NewAsList()
 	asList.Push(&B{Age: 121})
@@ -309,4 +332,25 @@ func TestClear(t *testing.T) {
 	})
 	asList.Clear() //清除所有元素
 	t.Log("Clear后元素个数为", asList.Length())
+}
+
+func TestInt2Json(t *testing.T) {
+	arr := []int{1, 2, 3, 4, 5, 6}
+	jsonArr, err := json.Marshal(arr)
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(string(jsonArr))
+	arr2 := []interface{}{}
+	err2 := json.Unmarshal(jsonArr, &arr2)
+	if err2 != nil {
+		t.Error(err2)
+	}
+	for _, item := range arr2 {
+		itemData, _ := json.Marshal(item)
+		t.Log("itemData", string(itemData))
+		var originInt int
+		json.Unmarshal(itemData, &originInt)
+		t.Log("originInt", originInt)
+	}
 }

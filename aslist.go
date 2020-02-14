@@ -25,6 +25,15 @@ func NewAsList() *AsList {
 	}
 }
 
+func NewAsListWithGanerateUniqueIdFunc(ganerateUniqueId func(interface{}) string) *AsList {
+	return &AsList{
+		&sync.Mutex{},
+		[]interface{}{},
+		ganerateUniqueId,
+		set.New(set.ThreadSafe),
+	}
+}
+
 func (self *AsList) Has(obj interface{}) bool {
 	if self.GanerateUniqueId != nil {
 		return self.UniqueSet.Has(self.GanerateUniqueId(obj))
@@ -57,7 +66,7 @@ func (self *AsList) MarshalJson() []byte {
 
 func (self *AsList) UnmarshalJson(data []byte, isAppend bool, unSerialize func(itemData []byte) interface{}) error {
 	var err error
-	tempList := []map[string]interface{}{}
+	tempList := []interface{}{}
 	err = json.Unmarshal(data, &tempList)
 	if err != nil {
 		return err
