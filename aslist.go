@@ -10,7 +10,7 @@ import (
 )
 
 type AsList struct {
-	locker           *sync.Mutex
+	locker           *sync.RWMutex
 	list             []interface{}
 	GanerateUniqueId func(interface{}) string
 	UniqueSet        set.Interface
@@ -18,7 +18,7 @@ type AsList struct {
 
 func NewAsList() *AsList {
 	return &AsList{
-		&sync.Mutex{},
+		&sync.RWMutex{},
 		[]interface{}{},
 		nil,
 		set.New(set.ThreadSafe),
@@ -27,7 +27,7 @@ func NewAsList() *AsList {
 
 func NewAsListWithGanerateUniqueIdFunc(ganerateUniqueId func(interface{}) string) *AsList {
 	return &AsList{
-		&sync.Mutex{},
+		&sync.RWMutex{},
 		[]interface{}{},
 		ganerateUniqueId,
 		set.New(set.ThreadSafe),
@@ -52,14 +52,14 @@ func (self *AsList) Has(obj interface{}) bool {
 }
 
 func (self *AsList) Length() int {
-	self.locker.Lock()
-	defer self.locker.Unlock()
+	self.locker.RLock()
+	defer self.locker.RUnlock()
 	return len(self.list)
 }
 
 func (self *AsList) MarshalJson() []byte {
-	self.locker.Lock()
-	defer self.locker.Unlock()
+	self.locker.RLock()
+	defer self.locker.RUnlock()
 	data, _ := json.Marshal(self.list)
 	return data
 }
@@ -127,7 +127,6 @@ func (self *AsList) RightPush(obj interface{}) {
 			self.list = append(self.list, obj)
 		}
 	}
-
 }
 
 func (self *AsList) LeftPush(obj interface{}) {
@@ -188,8 +187,8 @@ func (self *AsList) LeftPop() interface{} {
 }
 
 func (self *AsList) Range(rangeFunc func(index int, item interface{}) bool) {
-	self.locker.Lock()
-	defer self.locker.Unlock()
+	self.locker.RLock()
+	defer self.locker.RUnlock()
 	for i, item := range self.list {
 		if rangeFunc(i, item) {
 			break
