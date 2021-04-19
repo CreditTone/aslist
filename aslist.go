@@ -3,10 +3,13 @@ package aslist
 import (
 	"encoding/json"
 	"errors"
-	log "github.com/CreditTone/colorfulog"
-	"gopkg.in/fatih/set.v0"
+	"math/rand"
 	"reflect"
 	"sync"
+	"time"
+
+	log "github.com/CreditTone/colorfulog"
+	"gopkg.in/fatih/set.v0"
 )
 
 type AsList struct {
@@ -17,6 +20,7 @@ type AsList struct {
 }
 
 func NewAsList() *AsList {
+	rand.Seed(time.Now().UnixNano())
 	return &AsList{
 		&sync.RWMutex{},
 		[]interface{}{},
@@ -182,6 +186,29 @@ func (self *AsList) LeftPop() interface{} {
 			self.UniqueSet.Remove(self.GanerateUniqueId(firstItem))
 		}
 		return firstItem
+	}
+	return nil
+}
+
+func (self *AsList) get(index int) interface{} {
+	if index >= 0 && index < len(self.list) {
+		return self.list[index]
+	}
+	return nil
+}
+
+func (self *AsList) Get(index int) interface{} {
+	self.locker.RLock()
+	defer self.locker.RUnlock()
+	return self.get(index)
+}
+
+func (self *AsList) RandomGet() interface{} {
+	self.locker.RLock()
+	defer self.locker.RUnlock()
+	if len(self.list) > 0 {
+		randNum := rand.Intn(len(self.list))
+		return self.get(randNum)
 	}
 	return nil
 }
